@@ -24,13 +24,6 @@ class Test_movie
         // save post for input box, select box, textarea box
         add_action('save_post', array($this, 'custom_meta_box_details'));
 
-        // movie meta boxes
-        add_action('add_meta_boxes', array($this, 'movie_custom_meta_boxs'));
-        //save movie meta boxes
-        add_action('save_post', array($this, 'movie_details'));
-
-
-
         // administration menu 
         add_action('admin_menu', array($this, "administration_menu"));
         // fruit custom taxonomy
@@ -94,7 +87,7 @@ class Test_movie
     public function textarea_box_callback($args)
     {
     ?>
-        <label><?php echo $args['label'] ?></label><br>
+        <label><?php esc_html_e($args['label']) ?></label><br>
         <textarea name="textarea_box"></textarea>
     <?php
     }
@@ -106,8 +99,8 @@ class Test_movie
     public function check_box_callback($args)
     {
     ?>
-        <label><?php echo esc_html($args['label']) ?></label>
-        <input type='checkbox' name='check_box' value='Yes' /><label><?php echo esc_html($args['type']) ?></label>
+        <label><?php esc_html_e($args['label']) ?></label>
+        <input type='checkbox' name='check_box' value='Yes' /><label><?php esc_html_e($args['type']) ?></label>
     <?php
     }
 
@@ -118,9 +111,9 @@ class Test_movie
     public function radio_field_callback($args)
     {
     ?>
-        <label><?php echo esc_html($args['label']) ?></label>
-        <input type='radio' name='radio_box' value='Yes' /><label><?php echo esc_html($args['label-1']) ?></label>
-        <input type='radio' name='radio_box' value='No' /><label><?php echo esc_html($args['label-2']) ?></label>
+        <label><?php esc_html_e($args['label']) ?></label>
+        <input type='radio' name='radio_box' value='Yes' /><label><?php esc_html_e($args['label-1']) ?></label>
+        <input type='radio' name='radio_box' value='No' /><label><?php esc_html_e($args['label-2']) ?></label>
     <?php
     }
 
@@ -131,7 +124,7 @@ class Test_movie
     public function input_field_callback($args)
     {
     ?>
-        <label> <?php echo esc_html($args['label']) ?></label>
+        <label> <?php esc_html_e($args['label']) ?></label>
         <input type='text' name='input_field' value='' />
     <?php
     }
@@ -164,9 +157,17 @@ class Test_movie
      */
     public function administration_menu()
     {
-        add_menu_page('Administration', 'Administration', 'manage_options', 'administration_slug', array($this, 'administration_callback'));
-        add_submenu_page('administration_slug', 'administration_setting', ' Administration_setting', 'manage_options', 'adm_setting_slug', array($this, 'administration_setting_callback'));
+        add_menu_page( 'Administration', 'Administration', 'manage_options','parent',  array($this, 'administration_callback'),'', "70.23423" );
+        // this 'hides' the extra.  actually, just makes the text nothing: ''  
+        add_submenu_page( 'parent', '',     '', 'manage_options',   'parent',   '__return_null' );
+        //ah, but this removes it completely (you need to add it, then remove it :/     
+        remove_submenu_page('parent','parent');
+
+        add_submenu_page('parent', 'administration_setting', ' Administration_setting', 'manage_options', 'adm_setting_slug', array($this, 'administration_setting_callback'));
         add_action('admin_init', array($this, 'administration_option_init_fn'));
+}
+    public function wpdocs_orders_function(){
+
     }
 
     /**
@@ -206,7 +207,7 @@ class Test_movie
             <?php
             settings_fields('adm-setting-group');
             do_settings_sections("adm_setting_slug");
-            submit_button();
+            submit_button('Save Details');
             ?>
         </form>
         <?php
@@ -221,28 +222,23 @@ class Test_movie
         <table>
             <tr>
                 <th>Name</th>
-                <td><?php echo esc_html($name) ?></td>
-                <td><button>delete</button></td>
+                <td><?php esc_html_e($name) ?></td>
             </tr>
             <tr>
                 <th>Engineering</th>
-                <td><?php echo esc_html($engineering) ?></td>
-                <td><button>delete</button></td>
+                <td><?php esc_html_e($engineering) ?></td>
             </tr>
             <tr>
                 <th>Join Office</th>
-                <td><?php echo esc_html($join_office) ?></td>
-                <td><button>delete</button></td>
+                <td><?php esc_html_e($join_office) ?></td>
             </tr>
             <tr>
                 <th>About</th>
-                <td><?php echo esc_html($about) ?></td>
-                <td><button>delete</button></td>
+                <td><?php esc_html_e($about) ?></td>
             </tr>
             <tr>
                 <th>Dropdown</th>
-                <td><?php echo esc_html($dropdown) ?></td>
-                <td><button>delete</button></td>
+                <td><?php esc_html_e($dropdown) ?></td>
             </tr>
         </table>
         <!--End of saved detail list -->
@@ -256,9 +252,14 @@ class Test_movie
     {
         $labels = array(
             'name' => 'Fruits',
-            'singular_name' => 'fruit',
+            'singular_name' => 'Fruit',
+            'parent_item'=>'Parent Fruit',
             'search_items' => "search fruit",
-
+            'update_item'=>"Update Fruit",
+            'edit_item'=>"Edit Fruit",
+            'add_new_item'=>"Add New Fruit",
+            'new_item_name'=>'New Fruit Name',
+            
         );
         $args = array(
             'hierarchical' => true,
@@ -305,7 +306,7 @@ class Test_movie
     {
         $value = get_post_meta($post->ID, '_movie_director', true);
     ?>
-        <input type="text" name="movie_director" id="movie_director" value="<?php echo esc_attr($value); ?>" />
+        <input type="text" name="movie_director" id="movie_director" value="<?php esc_attr_e($value); ?>" />
     <?php
     }
     public function movie_casts_html($post)
@@ -313,7 +314,7 @@ class Test_movie
         $value = get_post_meta($post->ID, '_movie_casts', true);
 
     ?>
-        <input type="text" name="movie_casts" id="movie_casts" value="<?php echo esc_attr($value) ?>" />
+        <input type="text" name="movie_casts" id="movie_casts" value="<?php esc_attr_e($value) ?>" />
     <?php
     }
     public function movie_release_date_html($post)
@@ -321,7 +322,7 @@ class Test_movie
         $value = get_post_meta($post->ID, '_movie_release_date', true);
 
     ?>
-        <input type="text" name="movie_release_date" id="movie_release_date" value="<?php echo esc_attr($value) ?>" />
+        <input type="text" name="movie_release_date" id="movie_release_date" value="<?php esc_attr_e($value) ?>" />
     <?php
     }
 
@@ -413,7 +414,7 @@ class Test_movie
     {
         $value = get_post_meta($post->ID, '_custom_text_box', true);
     ?>
-        <input type="text" name="input_text" id="text_input" value="<?php echo esc_attr($value) ?>" />
+        <input type="text" name="input_text" id="text_input" value="<?php esc_attr_e($value) ?>" />
 <?php
     }
 
@@ -447,12 +448,16 @@ class Test_movie
      */
     public function movie_custom_post_type()
     {
+         // movie meta boxes
+         add_action('add_meta_boxes', array($this, 'movie_custom_meta_boxs'));
+         //save movie meta boxes
+         add_action('save_post', array($this, 'movie_details'));
+
         $labels = array(
             'name' => 'Movies',
             'singular_name' => 'Movie',
             'add_new' => 'Add Movie',
             'add_new_item' => "Movie Title",
-
         );
         $supports = array(
             'title', 'editor', 'thumbnail', 'comments', 'excerpt'
