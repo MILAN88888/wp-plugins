@@ -18,20 +18,25 @@ class Test_movie
      */
     public function __construct()
     {
+
+        // input box select box and texarea meta boxes
         add_action('add_meta_boxes', array($this, 'custom_meta_boxs'));
+        // save post for input box, select box, textarea box
+        add_action('save_post', array($this, 'custom_meta_box_details'));
+
+        // movie meta boxes
         add_action('add_meta_boxes', array($this, 'movie_custom_meta_boxs'));
-        add_action('save_post', array($this, 'save_custom_text_box'));
-        add_action('save_post', array($this, 'save_custom_select_box'));
-        add_action('save_post', array($this, 'save_custom_textarea_box'));
-        add_action('save_post', array($this, 'save_movie_director'));
-        add_action('save_post', array($this, 'save_movie_casts'));
+        //save movie meta boxes
+        add_action('save_post', array($this, 'movie_details'));
 
-        add_action('save_post', array($this, 'save_movie_release_date'));
+
+
+        // administration menu 
         add_action('admin_menu', array($this, "administration_menu"));
-
-
-        add_action('init', array($this, 'movie_custom_post_type'));
+        // fruit custom taxonomy
         add_action('init', array($this, 'fruits_custom_taxonomy'));
+        // movie custom post type 
+        add_action('init', array($this, 'movie_custom_post_type'));
     }
 
     /**
@@ -41,27 +46,26 @@ class Test_movie
     public function administration_option_init_fn()
     {
         // for registering and save 
-        register_setting('adm-setting-group', 'input_field');
-        register_setting('adm-setting-group', 'radio_box');
-        register_setting('adm-setting-group', 'check_box');
-        register_setting('adm-setting-group', 'textarea_box');
-        register_setting('adm-setting-group', 'dropdown_box');
-        
+        $inputs = array('input_field', 'radio_box', 'check_box', 'textarea_box', 'dropdown_box');
+        foreach ($inputs as $input) {
+            register_setting('adm-setting-group', $input);
+        }
+
         // for section
         add_settings_section('adm-section-options', 'Adminstration Setting Option', array($this, 'adminstration_section_option'), 'adm_setting_slug');
 
         // for fields
-        add_settings_field('input-field', 'Input Field', array($this, 'input_field_callback'), 'adm_setting_slug', 'adm-section-options',array(
-            'label'=> "Name:"
+        add_settings_field('input-field', 'Input Field', array($this, 'input_field_callback'), 'adm_setting_slug', 'adm-section-options', array(
+            'label' => "Name:"
         ));
         add_settings_field('radio-box', 'Radio Box', array($this, 'radio_field_callback'), 'adm_setting_slug', 'adm-section-options', array(
-            'label-1'=>"Yes",
+            'label-1' => "Yes",
             'label-2' => "No",
-            'label'=>"have you completed engineering ?"
+            'label' => "have you completed engineering ?"
         ));
         add_settings_field('check-box', 'Check Box', array($this, 'check_box_callback'), 'adm_setting_slug', 'adm-section-options', array(
-            'label'=>'Can you join office whenever we decide to join us ?',
-            'type'=>"yes"
+            'label' => 'Can you join office whenever we decide to join us ?',
+            'type' => "yes"
         ));
         add_settings_field('textarea-box', 'Textarea Box', array($this, 'textarea_box_callback'), 'adm_setting_slug', 'adm-section-options', array(
             'label' => "Write About Your Selft",
@@ -125,7 +129,7 @@ class Test_movie
      * 
      */
     public function input_field_callback($args)
-    {  
+    {
     ?>
         <label> <?php echo esc_html($args['label']) ?></label>
         <input type='text' name='input_field' value='' />
@@ -171,8 +175,8 @@ class Test_movie
      */
     public function administration_callback()
     {
-        if( !current_user_can('manage_options')) {
-            return ;
+        if (!current_user_can('manage_options')) {
+            return;
         }
     ?>
         <h1>Administration</h1>
@@ -186,17 +190,17 @@ class Test_movie
     public function administration_setting_callback()
     {
         // check the user capability
-        if( !current_user_can('manage_options')) {
-            return ;
+        if (!current_user_can('manage_options')) {
+            return;
         }
-        
+
         // get the setting saved message
-        if ( isset( $_GET['settings-updated'] ) ) {
+        if (isset($_GET['settings-updated'])) {
 
-            add_settings_error( 'adm_messages', 'adm_message', 'setting saved', 'updated' );
+            add_settings_error('adm_messages', 'adm_message', 'setting saved', 'updated');
         }
 
-        settings_errors( 'adm_messages' );
+        settings_errors('adm_messages');
     ?>
         <form method="post" action="options.php">
             <?php
@@ -205,23 +209,43 @@ class Test_movie
             submit_button();
             ?>
         </form>
-    <?php
-    $name = get_option('input_field');
-    $engineering = get_option('radio_box');
-    $join_office = get_option('check_box');
-    $about = get_option('textarea_box');
-    $dropdown = get_option('dropdown_box');
-    ?>
-    <!--Saved Details List -->
-    <caption>Your Details</caption>
-    <table>
-        <tr><th>Name</th><td><?php echo esc_html($name) ?></td><td><button>delete</button></td></tr>
-        <tr><th>Engineering</th><td><?php echo esc_html($engineering) ?></td><td><button>delete</button></td></tr>
-        <tr><th>Join Office</th><td><?php echo esc_html($join_office) ?></td><td><button>delete</button></td></tr>
-        <tr><th>About</th><td><?php echo esc_html($about) ?></td><td><button>delete</button></td></tr>
-        <tr><th>Dropdown</th><td><?php echo esc_html($dropdown) ?></td><td><button>delete</button></td></tr>
-    </table>
-    <!--End of saved detail list -->
+        <?php
+        $name = get_option('input_field');
+        $engineering = get_option('radio_box');
+        $join_office = get_option('check_box');
+        $about = get_option('textarea_box');
+        $dropdown = get_option('dropdown_box');
+        ?>
+        <!--Saved Details List -->
+        <caption>Your Details</caption>
+        <table>
+            <tr>
+                <th>Name</th>
+                <td><?php echo esc_html($name) ?></td>
+                <td><button>delete</button></td>
+            </tr>
+            <tr>
+                <th>Engineering</th>
+                <td><?php echo esc_html($engineering) ?></td>
+                <td><button>delete</button></td>
+            </tr>
+            <tr>
+                <th>Join Office</th>
+                <td><?php echo esc_html($join_office) ?></td>
+                <td><button>delete</button></td>
+            </tr>
+            <tr>
+                <th>About</th>
+                <td><?php echo esc_html($about) ?></td>
+                <td><button>delete</button></td>
+            </tr>
+            <tr>
+                <th>Dropdown</th>
+                <td><?php echo esc_html($dropdown) ?></td>
+                <td><button>delete</button></td>
+            </tr>
+        </table>
+        <!--End of saved detail list -->
     <?php
     }
 
@@ -233,9 +257,11 @@ class Test_movie
         $labels = array(
             'name' => 'Fruits',
             'singular_name' => 'fruit',
-            'search_items' => "search fruit"
+            'search_items' => "search fruit",
+
         );
         $args = array(
+            'hierarchical' => true,
             'labels' => $labels,
             'hierarchical' => true,
             'show_ui' => true,
@@ -243,8 +269,9 @@ class Test_movie
             'query_var' => true,
             'rewrite' => ['slug' => 'fruits'],
         );
-        register_taxonomy('fruits', ['post'], $args);
+        register_taxonomy('fruits', ['movie'], $args);
     }
+
 
     /**
      * Function add movie costum meta box
@@ -278,7 +305,7 @@ class Test_movie
     {
         $value = get_post_meta($post->ID, '_movie_director', true);
     ?>
-        <input type="text" name="movie_director" id="movie_director" value="<?php esc_attr($value); ?>" />
+        <input type="text" name="movie_director" id="movie_director" value="<?php echo esc_attr($value); ?>" />
     <?php
     }
     public function movie_casts_html($post)
@@ -286,7 +313,7 @@ class Test_movie
         $value = get_post_meta($post->ID, '_movie_casts', true);
 
     ?>
-        <input type="text" name="movie_casts" id="movie_casts" value="<?php esc_attr($value) ?>" />
+        <input type="text" name="movie_casts" id="movie_casts" value="<?php echo esc_attr($value) ?>" />
     <?php
     }
     public function movie_release_date_html($post)
@@ -294,41 +321,28 @@ class Test_movie
         $value = get_post_meta($post->ID, '_movie_release_date', true);
 
     ?>
-        <input type="text" name="movie_release_date" id="movie_release_date" value="<?php esc_attr($value) ?>" />
+        <input type="text" name="movie_release_date" id="movie_release_date" value="<?php echo esc_attr($value) ?>" />
     <?php
     }
-    public function save_movie_director($post_id)
-    {
-        if (array_key_exists('movie_director', $_POST)) {
-            $input_value = sanitize_text_field($_POST['movie_director']);
-            update_post_meta(
-                $post_id,
-                '_movie_director',
-                $input_value
-            );
-        }
-    }
-    public function save_movie_casts($post_id)
-    {
 
-        if (array_key_exists('movie_casts', $_POST)) {
-            $input_value = sanitize_text_field($_POST['movie_casts']);
-            update_post_meta(
-                $post_id,
-                '_movie_casts',
-                $input_value
-            );
-        }
-    }
-    public function save_movie_release_date($post_id)
+    /**
+     * Function to save the movie details
+     * 
+     */
+    public function movie_details($post_id)
     {
+        $movie_director = isset($_POST['movie_director']) ? sanitize_text_field($_POST['movie_director']) : '';
+        $movie_casts = isset($_POST['movie_casts']) ? sanitize_text_field($_POST['movie_casts']) : '';
+        $movie_release_date = isset($_POST['movie_release_date']) ? sanitize_text_field($_POST['movie_release_date']) : '';
 
-        if (array_key_exists('movie_release_date', $_POST)) {
-            $input_value = sanitize_text_field($_POST['movie_release_date']);
+        $details = array(
+            '_movie_director' => $movie_director, '_movie_casts' => $movie_casts, '_movie_release_date' => $movie_release_date
+        );
+        foreach ($details as $key => $value) {
             update_post_meta(
                 $post_id,
-                '_movie_release_date',
-                $input_value
+                $key,
+                $value
             );
         }
     }
@@ -387,7 +401,7 @@ class Test_movie
         $value = get_post_meta($post->ID, '_custom_textarea_box', true);
     ?>
 
-        <textarea name="input_textarea"><?php esc_textarea($value) ?></textarea>
+        <textarea name="input_textarea"><?php echo esc_textarea($value) ?></textarea>
     <?php
     }
 
@@ -399,54 +413,30 @@ class Test_movie
     {
         $value = get_post_meta($post->ID, '_custom_text_box', true);
     ?>
-        <input type="text" name="input_text" id="text_input" value="<?php esc_attr($value) ?>" />
+        <input type="text" name="input_text" id="text_input" value="<?php echo esc_attr($value) ?>" />
 <?php
     }
 
     /**
-     * Function to save custom textarea box data
+     * Function to save custom meta boxes
      * 
+     * @var $post_id is id of post
      */
-    public function save_custom_textarea_box($post_id)
+    public function custom_meta_box_details($post_id)
     {
-        if (array_key_exists('input_textarea', $_POST)) {
-            $input_value = sanitize_text_field($_POST['input_textarea']);
+        $input_value1 = isset($_POST['input_textarea']) ? sanitize_text_field($_POST['input_textarea']) : '';
+        $input_value2 = isset($_POST['input_select']) ? sanitize_text_field($_POST['input_select']) : '';
+        $input_value3 = isset($_POST['input_text']) ? sanitize_text_field($_POST['input_text']) : '';
+        $details = array(
+            '_custom_textarea_box' => $input_value1,
+            '_custom_select_box' => $input_value2,
+            '_custom_text_box' => $input_value3
+        );
+        foreach ($details as $key => $value) {
             update_post_meta(
                 $post_id,
-                '_custom_textarea_box',
-                $input_value
-            );
-        }
-    }
-
-    /**
-     * Function to save custom select box data
-     * 
-     */
-    public function save_custom_select_box($post_id)
-    {
-        if (array_key_exists('input_select', $_POST)) {
-            $input_value = sanitize_text_field($_POST['input_select']);
-            update_post_meta(
-                $post_id,
-                '_custom_select_box',
-                $input_value
-            );
-        }
-    }
-
-    /**
-     * Function to save custom text box data
-     * 
-     */
-    public function save_custom_text_box($post_id)
-    {
-        if (array_key_exists('input_text', $_POST)) {
-            $input_value = sanitize_text_field($_POST['input_text']);
-            update_post_meta(
-                $post_id,
-                '_custom_text_box',
-                $input_value
+                $key,
+                $value
             );
         }
     }
@@ -465,7 +455,7 @@ class Test_movie
 
         );
         $supports = array(
-            'title', 'editor', 'thumbnail', 'comments', 'excerpts'
+            'title', 'editor', 'thumbnail', 'comments', 'excerpt'
         );
         register_post_type('movie', array(
             'labels' => $labels,
@@ -475,7 +465,8 @@ class Test_movie
             'rewrite' => array('slug' => 'movies'),
             'publicly_queryable' => true,
             'show_ui' => true,
-            'supports' => $supports
+            'supports' => $supports,
+            'taxonomies' => array('fruits')
         ));
     }
     /**
