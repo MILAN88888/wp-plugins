@@ -1,0 +1,6 @@
+.search-div {
+    float: right;
+}
+.search-div input {
+    border-radius: 50px;
+}
