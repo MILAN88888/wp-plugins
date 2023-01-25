@@ -24,4 +24,16 @@ function pagi(i) {
         }
     })
 }
+function select_func()
+{
+    select_input = jQuery('#select_input').val();
+    jQuery.ajax({
+        url:user_js.ajaxurl,
+        method:'post',
+        data:{action:'user_sorting', 'select_input':select_input, 'security':user_js.user_js_nonce},
+        success: function(res){
+            jQuery('.table-div').html(res);
+        }
+    })
+}
 
