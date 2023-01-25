@@ -1,6 +1,13 @@
 .search-div {
-    float: right;
+    float: left;
+    padding:10px;
 }
 .search-div input {
     border-radius: 50px;
+}
+label {
+    color:blue
+}
+button {
+    background-color: green;
 }

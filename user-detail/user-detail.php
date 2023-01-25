@@ -21,7 +21,6 @@ if (!defined('ABSPATH')) {
  */
 class User_Detail
 {
-
     /**
      * Constructor of class
      * 
@@ -32,32 +31,31 @@ class User_Detail
 
         //style and script action
         add_action('wp_enqueue_scripts', array($this, 'user_enqueue'));
+        //Ajax actions
         add_action('wp_ajax_search_user', array($this, 'search_user'));
         add_action('wp_ajax_user_pagination', array($this, 'user_pagination'));
-        add_action('wp_ajax_user_sorting', array($this, 'user_sorting'));
+        add_action('wp_ajax_user_name_sorting', array($this, 'user_name_sorting'));
+        add_action('wp_ajax_user_role_sorting', array($this, 'user_role_sorting'));
+        add_action('wp_ajax_user_id_sorting', array($this, 'user_id_sorting'));
 
         //User details shortcode
         add_shortcode('user_details', array($this, 'user_details'));
     }
 
     /**
-     * Function for user sorting
+     * Function for user sorting by id
      * 
      */
-    public function user_sorting()
+    public function user_id_sorting()
     {
         //checking and verifing the nonce
         if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
             $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
             $total = get_users();
-            if ($select_input == 'name') {
-                $user_query = get_users(array('order' => 'ASC', 'orderby' => 'display_name', 'number' => 5));
-            } elseif ($select_input == 'id') {
-
+            if ($select_input == 'asc') {
                 $user_query = get_users(array('order' => 'ASC', 'orderby' => 'ID', 'number' => 5));
-            } elseif ($select_input == 'role') {
-
-                $user_query = get_users(array('meta_key' => 'wp_capabilities', 'orderby' => 'meta_value', 'number' => 5));
+            } elseif ($select_input == 'desc') {
+                $user_query = get_users(array('order' => 'DESC', 'orderby' => 'ID', 'number' => 5));
             }
             $i = 1;
             _e($this->user_table($user_query, $total, $i));
@@ -66,6 +64,49 @@ class User_Detail
         }
         wp_die();
     }
+
+    /**
+     * Function for user sorting by role
+     * 
+     */
+    public function user_role_sorting()
+    {
+        //checking and verifing the nonce
+        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
+            $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
+            $total = get_users(array('role' => $select_input));
+            $user_query = get_users(array('role' => $select_input, 'number' => 5));
+            $i = 1;
+            _e($this->user_table($user_query, $total, $i));
+        } else {
+            _e('error');
+        }
+        wp_die();
+    }
+
+    /**
+     * Function for user sorting by name
+     * 
+     */
+    public function user_name_sorting()
+    {
+        //checking and verifing the nonce
+        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
+            $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
+            $total = get_users();
+            if ($select_input == 'asc') {
+                $user_query = get_users(array('order' => 'ASC', 'orderby' => 'display_name', 'number' => 5));
+            } elseif ($select_input == 'desc') {
+                $user_query = get_users(array('order' => 'DESC', 'orderby' => 'display_name', 'number' => 5));
+            }
+            $i = 1;
+            _e($this->user_table($user_query, $total, $i));
+        } else {
+            _e('error');
+        }
+        wp_die();
+    }
+    
     /**
      * Function for user pagination
      * 
@@ -114,13 +155,13 @@ class User_Detail
         }
         wp_die();
     }
+
     /**
      * Function for search  user 
      * 
      */
     public function search_user()
     {
-
         //checking and verifing the nonce
         if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
 
@@ -164,16 +205,6 @@ class User_Detail
                         )
                     );
                 }
-                // global $wpdb;
-                // global $table_prefix;
-                // $search_input = '%'.$search_input.'%';
-                // $table = $table_prefix . 'users';
-                // $tabl_2 = $table_prefix.'usermeta';
-                // $sql = $wpdb->prepare("SELECT u.*, m.meta_value FROM $table as u INNER JOIN $tabl_2 as m ON u.ID = m.user_id  WHERE u.display_name LIKE %s OR m.meta_key LIKE 'wp_capabilities' AND m.meta_value LIKE %s", $search_input, $search_input);
-                // $user_query =$wpdb->get_results($sql);
-
-                // var_dump($user_query);
-                // die();
             }
             $i = 1;
             _e($this->user_table($user_query, $total, $i));
@@ -226,6 +257,7 @@ class User_Detail
         }
         return;
     }
+    
     /**
      * Function show the table of user lists with pagination
      * 
@@ -246,12 +278,26 @@ class User_Detail
                 <div class="container">
                     <h5> <?php _e('User Detail Lists', 'user-detail') ?> </h5>
                     <div class="search-div">
-                        <label>Filter</label>
-                        <select onchange="select_func()" id="select_input" name="select_input" class="ml-2">
-                            <option value="name">Display Name</option>
-                            <option value="id">Id</option>
-                            <option value="role">Role</option>
+                        <label><?php _e('Display Name', 'user-detail') ?></label>
+                        <select onchange="name_select_func()" id="name_select_input" name="select_input" class="ml-2">
+                            <option value="asc"><?php _e('Ascending', 'user-detail') ?></option>
+                            <option value="desc"><?php _e('Descending', 'user-detail') ?></option>
                         </select>
+                        <label><?php _e('Role', 'user-detail') ?></label>
+                        <select onchange="role_select_func()" id="role_select_input" name="role_select_input" class="ml-2">
+                            <option value="administrator"><?php _e('Administrator', 'user-detail') ?></option>
+                            <option value="editor"><?php _e('Editor', 'user-detail') ?></option>
+                            <option value="author"><?php _e('Author', 'user-detail') ?></option>
+                            <option value="contributor"><?php _e('Contributor', 'user-detail') ?></option>
+                            <option value="subscriber"><?php _e('Subscriber', 'user-detail') ?></option>
+                        </select>
+                        <label><?php _e('User ID', 'user-detail') ?></label>
+                        <select onchange="id_select_func()" id="id_select_input" name="id_select_input" class="ml-2">
+                            <option value="asc"><?php _e('Ascending', 'user-detail') ?></option>
+                            <option value="desc"><?php _e('Descending', 'user-detail') ?></option>
+                        </select>
+                        <br>
+                        <br>
                         <label><?php _e('Search', 'user-detail') ?></label>
                         <input type="text" name="search_input" id="search_input" placeholder="Enter User Name or  Role" />
 
