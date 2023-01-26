@@ -66,7 +66,7 @@ class User_Detail
                 esc_html_e($this->user_pagination($search_input, $i));
             }
         } else {
-            esc_html_e('Security Issue raied');
+            esc_html_e('Security Issue raied', 'user-detail');
         }
         wp_die();
     }
@@ -89,7 +89,7 @@ class User_Detail
 
             $this->user_table($user_query, $total, $i);
         } else {
-            esc_html_e(" No Id Record Found");
+            esc_html_e(" No Id Record Found", 'user-detail');
         }
         return;
     }
@@ -107,7 +107,7 @@ class User_Detail
         if (!empty($user_query)) {
             $this->user_table($user_query, $total, $i);
         } else {
-            esc_html_e(" No Role Record Found");
+            esc_html_e(" No Role Record Found", 'user-detail');
         }
         return;
     }
@@ -129,7 +129,7 @@ class User_Detail
         if (!empty($user_query)) {
             $this->user_table($user_query, $total, $i);
         } else {
-            esc_html_e(" No Name Record Found");
+            esc_html_e(" No Name Record Found", 'user-detail');
         }
         return;
     }
@@ -172,8 +172,12 @@ class User_Detail
                 )
             );
         }
-        //calling to display table
-        $this->user_table($user_query, $total, $i);
+        if(!empty($user_query)) {
+            //calling to display table
+            $this->user_table($user_query, $total, $i);
+        } else {
+            esc_html_e("Record Not Found", 'user-detail');
+        }
 
         return;
     }
@@ -226,7 +230,12 @@ class User_Detail
             }
         }
         $i = 1;
-        $this->user_table($user_query, $total, $i);
+        if(!empty($user_query)) {
+            //calling to display table
+            $this->user_table($user_query, $total, $i);
+        } else {
+            esc_html_e("Record Not Found", 'user-detail');
+        }
         return;
     }
 
@@ -263,13 +272,16 @@ class User_Detail
             ?>
         </table>
         <?php
-        //calculating pagination
-        $number_of_users = count($total);
-        $ceil = ceil($number_of_users / 5);
-        for ($i = 1; $i <= $ceil; $i++) {
-        ?>
-            <button onclick="pagi('<?php esc_html_e($i) ?>')"><?php esc_html_e($i) ?></button>
-            <?php
+        if(count($total)>5) {
+
+            //calculating pagination
+            $number_of_users = count($total);
+            $ceil = ceil($number_of_users / 5);
+            for ($i = 1; $i <= $ceil; $i++) {
+            ?>
+                <button onclick="pagi('<?php esc_html_e($i) ?>')"><?php esc_html_e($i, 'user-detail') ?></button>
+                <?php
+            }
         }
         return;
     }
@@ -292,29 +304,29 @@ class User_Detail
                 ob_start();
             ?>
                 <div class="container">
-                    <h5> <?php _e('User Detail Lists', 'user-detail') ?> </h5>
+                    <h5> <?php esc_html_e('User Detail Lists', 'user-detail') ?> </h5>
                     <div class="search-div">
-                        <label><?php _e('Display Name', 'user-detail') ?></label>
+                        <label><?php esc_html_e('Display Name', 'user-detail') ?></label>
                         <select onchange="name_select_func()" id="name_select_input" name="select_input" class="ml-2">
-                            <option value="asc"><?php _e('Ascending', 'user-detail') ?></option>
-                            <option value="desc"><?php _e('Descending', 'user-detail') ?></option>
+                            <option value="asc"><?php esc_html_e('Ascending', 'user-detail') ?></option>
+                            <option value="desc"><?php esc_html_e('Descending', 'user-detail') ?></option>
                         </select>
-                        <label><?php _e('Role', 'user-detail') ?></label>
+                        <label><?php esc_html_e('Role', 'user-detail') ?></label>
                         <select onchange="role_select_func()" id="role_select_input" name="role_select_input" class="ml-2">
-                            <option value="administrator"><?php _e('Administrator', 'user-detail') ?></option>
-                            <option value="editor"><?php _e('Editor', 'user-detail') ?></option>
-                            <option value="author"><?php _e('Author', 'user-detail') ?></option>
-                            <option value="contributor"><?php _e('Contributor', 'user-detail') ?></option>
-                            <option value="subscriber"><?php _e('Subscriber', 'user-detail') ?></option>
+                            <option value="administrator"><?php esc_html_e('Administrator', 'user-detail') ?></option>
+                            <option value="editor"><?php esc_html_e('Editor', 'user-detail') ?></option>
+                            <option value="author"><?php esc_html_e('Author', 'user-detail') ?></option>
+                            <option value="contributor"><?php esc_html_e('Contributor', 'user-detail') ?></option>
+                            <option value="subscriber"><?php esc_html_e('Subscriber', 'user-detail') ?></option>
                         </select>
-                        <label><?php _e('User ID', 'user-detail') ?></label>
+                        <label><?php esc_html_e('User ID', 'user-detail') ?></label>
                         <select onchange="id_select_func()" id="id_select_input" name="id_select_input" class="ml-2">
-                            <option value="asc"><?php _e('Ascending', 'user-detail') ?></option>
-                            <option value="desc"><?php _e('Descending', 'user-detail') ?></option>
+                            <option value="asc"><?php esc_html_e('Ascending', 'user-detail') ?></option>
+                            <option value="desc"><?php esc_html_e('Descending', 'user-detail') ?></option>
                         </select>
                         <br>
                         <br>
-                        <label><?php _e('Search', 'user-detail') ?></label>
+                        <label><?php esc_html_e('Search', 'user-detail') ?></label>
                         <input type="text" name="search_input" id="search_input" placeholder="Enter User Name or  Role" />
 
 
@@ -333,7 +345,7 @@ class User_Detail
             } else {
             ?>
                 <div class="alert">
-                    <p> <?php _e('Only administrator and editor can see the details of all users', 'user-detail') ?></p>
+                    <p> <?php esc_html_e('Only administrator and editor can see the details of all users', 'user-detail') ?></p>
                 </div>
 <?php
             }
