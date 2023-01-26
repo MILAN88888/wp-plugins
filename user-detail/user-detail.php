@@ -9,6 +9,7 @@
  * Requires PHP:      7.2
  * Author:            Milan Kumar Chaudhary
  * Author URI:        https:milankumarchaudhary.com.np
+ * License:           GPL v2 or later
  */
 
 if (!defined('ABSPATH')) {
@@ -34,19 +35,23 @@ class User_Detail
         add_action('wp_enqueue_scripts', array($this, 'user_enqueue'));
 
         //Ajax actions
-        add_action('wp_ajax_user_sorting', array($this, 'user_sorting'));
+        add_action('wp_ajax_user_data', array($this, 'user_data'));
 
         //User details shortcode
         add_shortcode('user_details', array($this, 'user_details'));
     }
 
     /**
-     * Function User sorting by Id , Role and by name
+     * Function user_data() for calling sorting user by Role, Id, And Display Name as well as  for search user and pagination
      * 
      */
-    public function user_sorting()
+    public function user_data()
     {
-        //checking and verifing the nonce
+        //checking the request is from Ajax or Not
+        if(!defined('DOING_AJAX') && ! DOING_AJAX) {
+            return;
+        } 
+        //checking and verifing the ajax nonce
         if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
             if (isset($_POST['name_input'])) {
                 $select_input = sanitize_text_field($_POST['name_input']);
@@ -58,7 +63,7 @@ class User_Detail
                 $select_input = sanitize_text_field($_POST['id_input']);
                 esc_html_e($this->user_id_sorting($select_input));
             } elseif (isset($_POST['search_input'])) {
-                $search_input = sanitize_text_field($_POST['search_input']);
+                $search_input = sanitize_key($_POST['search_input']); // bz it is key in in_array()
                 esc_html_e($this->search_user($search_input));
             } elseif (isset($_POST['pagi_input'])) {
                 $search_input = sanitize_text_field($_POST['search_input']);
@@ -74,9 +79,9 @@ class User_Detail
     /**
      * Function for user sorting by id
      * 
-     * @var $select_input
+     * @var $select_input is user id 
      */
-    public function user_id_sorting($select_input)
+    protected function user_id_sorting(string $select_input)
     {
         $total = get_users();
         if ($select_input == 'asc') {
@@ -97,9 +102,9 @@ class User_Detail
     /**
      * Function for user sorting by role
      * 
-     * @var $select_input
+     * @var $select_input is role of user
      */
-    public function user_role_sorting($select_input)
+    protected function user_role_sorting(string $select_input)
     {
         $total = get_users(array('role' => $select_input));
         $user_query = get_users(array('role' => $select_input, 'number' => 5));
@@ -115,9 +120,9 @@ class User_Detail
     /**
      * Function for user sorting by name
      * 
-     * @var $select_input
+     * @var $select_input is asc or desc order for sorting user name 
      */
-    public function user_name_sorting($select_input)
+    protected function user_name_sorting(string $select_input)
     {
         $total = get_users();
         if ($select_input == 'asc') {
@@ -137,10 +142,10 @@ class User_Detail
     /**
      * Function for user pagination
      * 
-     * @var $search_input
-     * @var $i
+     * @var $search_input is search value
+     * @var $i is pagination value
      */
-    public function user_pagination($search_input, $i)
+    protected function user_pagination(string $search_input, $i)
     {
         if ($search_input == '') {
             $user_query = get_users(
@@ -185,16 +190,16 @@ class User_Detail
     /**
      * Function for search  user 
      * 
-     * @var $search_input
+     * @var $search_input is search value
      */
-    public function search_user($search_input)
+    protected function search_user( string $search_input)
     {
         if ($search_input == '') {
             $total = get_users();
             $user_query = get_users(array('number' => 5));
         } else {
             $roles = array('administrator', 'editor', 'author', 'contributor', 'subscriber');
-            if (in_array($search_input, $roles)) {
+            if (in_array($search_input, $roles, true)) { // true for strict search key in array
 
                 $user_query = get_users(
                     array(
@@ -243,10 +248,10 @@ class User_Detail
      * Function to display user details in user table
      * 
      * @var $users array of user lists
-     * @var $total 
-     * @var $i
+     * @var $total is array of all users
+     * @var $i is value for pagination
      */
-    public function user_table(array $users, array $total, int $i)
+    protected function user_table(array $users, array $total, int $i)
     {
 ?>
         <table class="table">
@@ -263,8 +268,8 @@ class User_Detail
                 <tr>
                     <td><?php esc_html_e($i, 'user-detail') ?></td>
                     <td><?php esc_html_e($user_detail->user_nicename, 'user-detail') ?></td>
-                    <td><?php esc_attr_e($user_detail->display_name, 'user-detail') ?></td>
-                    <td><?php esc_attr_e($user_detail->roles[0], 'user-detail') ?></td>
+                    <td><?php esc_html_e($user_detail->display_name, 'user-detail') ?></td>
+                    <td><?php esc_html_e($user_detail->roles[0], 'user-detail') ?></td>
                 </tr>
             <?php
                 $i++;
@@ -279,7 +284,7 @@ class User_Detail
             $ceil = ceil($number_of_users / 5);
             for ($i = 1; $i <= $ceil; $i++) {
             ?>
-                <button onclick="pagi('<?php esc_html_e($i) ?>')"><?php esc_html_e($i, 'user-detail') ?></button>
+                <button onclick="pagi('<?php echo esc_js($i) ?>')"><?php esc_html_e($i, 'user-detail') ?></button>
                 <?php
             }
         }
@@ -293,10 +298,10 @@ class User_Detail
     public function user_details()
     {
         if (is_user_logged_in()) {
-
-            $users = wp_get_current_user();
-            $roles = (array)$users->roles;
-            if ($roles[0] == 'administrator' || $roles[0] == 'editor') {
+            // $users = wp_get_current_user();
+            // $roles = (array)$users->roles;
+            // if ($roles[0] === 'administrator' || $roles[0] === 'editor') {
+            if (current_user_can('editor') || current_user_can('administrator')) {
 
                 $total = get_users();
                 $users = get_users(array('number' => 5));
