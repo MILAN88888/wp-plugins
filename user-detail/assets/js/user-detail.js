@@ -4,7 +4,7 @@ jQuery(document).ready(function () {
         jQuery.ajax({
             url:user_js.ajaxurl,
             method:'post',
-            data:{action:'search_user', 'search_input':search_input, 'security':user_js.user_js_nonce},
+            data:{action:'user_sorting', 'search_input':search_input, 'security':user_js.user_js_nonce},
             success: function(res){
                 jQuery('.table-div').html(res);
             }
@@ -13,12 +13,12 @@ jQuery(document).ready(function () {
 
 });
 function pagi(i) {
-    search_input = jQuery('#seach_input').val();
+    search_value = jQuery('#seach_input').val();
     console.log(search_input);
     jQuery.ajax({
         url:user_js.ajaxurl,
         method:'post',
-        data:{action:'user_pagination', 'search_input':search_input,'i':i, 'security':user_js.user_js_nonce},
+        data:{action:'user_sorting', 'pagi_input':'pagi_input', 'search_value':search_value,'i':i, 'security':user_js.user_js_nonce},
         success: function(res){
             jQuery('.table-div').html(res);
         }
@@ -30,7 +30,7 @@ function name_select_func()
     jQuery.ajax({
         url:user_js.ajaxurl,
         method:'post',
-        data:{action:'user_name_sorting', 'select_input':select_input, 'security':user_js.user_js_nonce},
+        data:{action:'user_sorting', 'name_input':select_input, 'security':user_js.user_js_nonce},
         success: function(res){
             jQuery('.table-div').html(res);
         }
@@ -42,7 +42,7 @@ function role_select_func()
     jQuery.ajax({
         url:user_js.ajaxurl,
         method:'post',
-        data:{action:'user_role_sorting', 'select_input':select_input, 'security':user_js.user_js_nonce},
+        data:{action:'user_sorting', 'role_input':select_input, 'security':user_js.user_js_nonce},
         success: function(res){
             jQuery('.table-div').html(res);
         }
@@ -54,7 +54,7 @@ function id_select_func()
     jQuery.ajax({
         url:user_js.ajaxurl,
         method:'post',
-        data:{action:'user_id_sorting', 'select_input':select_input, 'security':user_js.user_js_nonce},
+        data:{action:'user_sorting', 'id_input':select_input, 'security':user_js.user_js_nonce},
         success: function(res){
             jQuery('.table-div').html(res);
         }

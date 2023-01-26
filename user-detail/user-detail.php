@@ -27,191 +27,207 @@ class User_Detail
      */
     public function __construct()
     {
+        //action to load text domain
         add_action('plugin_loaded', array($this, 'user_load_plugin_textdomain'));
 
         //style and script action
         add_action('wp_enqueue_scripts', array($this, 'user_enqueue'));
+
         //Ajax actions
-        add_action('wp_ajax_search_user', array($this, 'search_user'));
-        add_action('wp_ajax_user_pagination', array($this, 'user_pagination'));
-        add_action('wp_ajax_user_name_sorting', array($this, 'user_name_sorting'));
-        add_action('wp_ajax_user_role_sorting', array($this, 'user_role_sorting'));
-        add_action('wp_ajax_user_id_sorting', array($this, 'user_id_sorting'));
+        add_action('wp_ajax_user_sorting', array($this, 'user_sorting'));
 
         //User details shortcode
         add_shortcode('user_details', array($this, 'user_details'));
     }
 
     /**
-     * Function for user sorting by id
+     * Function User sorting by Id , Role and by name
      * 
      */
-    public function user_id_sorting()
+    public function user_sorting()
     {
         //checking and verifing the nonce
         if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
-            $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
-            $total = get_users();
-            if ($select_input == 'asc') {
-                $user_query = get_users(array('order' => 'ASC', 'orderby' => 'ID', 'number' => 5));
-            } elseif ($select_input == 'desc') {
-                $user_query = get_users(array('order' => 'DESC', 'orderby' => 'ID', 'number' => 5));
+            if (isset($_POST['name_input'])) {
+                $select_input = sanitize_text_field($_POST['name_input']);
+                esc_html_e($this->user_name_sorting($select_input));
+            } elseif (isset($_POST['role_input'])) {
+                $select_input = sanitize_text_field($_POST['role_input']);
+                esc_html_e($this->user_role_sorting($select_input));
+            } elseif (isset($_POST['id_input'])) {
+                $select_input = sanitize_text_field($_POST['id_input']);
+                esc_html_e($this->user_id_sorting($select_input));
+            } elseif (isset($_POST['search_input'])) {
+                $search_input = sanitize_text_field($_POST['search_input']);
+                esc_html_e($this->search_user($search_input));
+            } elseif (isset($_POST['pagi_input'])) {
+                $search_input = sanitize_text_field($_POST['search_input']);
+                $i = isset($_POST['i']) ? sanitize_text_field($_POST['i']) : '';
+                esc_html_e($this->user_pagination($search_input, $i));
             }
-            $i = 1;
-            _e($this->user_table($user_query, $total, $i));
         } else {
-            _e('error');
+            esc_html_e('Security Issue raied');
         }
         wp_die();
+    }
+
+    /**
+     * Function for user sorting by id
+     * 
+     * @var $select_input
+     */
+    public function user_id_sorting($select_input)
+    {
+        $total = get_users();
+        if ($select_input == 'asc') {
+            $user_query = get_users(array('order' => 'ASC', 'orderby' => 'ID', 'number' => 5));
+        } elseif ($select_input == 'desc') {
+            $user_query = get_users(array('order' => 'DESC', 'orderby' => 'ID', 'number' => 5));
+        }
+        $i = 1;
+        if (!empty($user_query)) {
+
+            $this->user_table($user_query, $total, $i);
+        } else {
+            esc_html_e(" No Id Record Found");
+        }
+        return;
     }
 
     /**
      * Function for user sorting by role
      * 
+     * @var $select_input
      */
-    public function user_role_sorting()
+    public function user_role_sorting($select_input)
     {
-        //checking and verifing the nonce
-        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
-            $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
-            $total = get_users(array('role' => $select_input));
-            $user_query = get_users(array('role' => $select_input, 'number' => 5));
-            $i = 1;
-            _e($this->user_table($user_query, $total, $i));
+        $total = get_users(array('role' => $select_input));
+        $user_query = get_users(array('role' => $select_input, 'number' => 5));
+        $i = 1;
+        if (!empty($user_query)) {
+            $this->user_table($user_query, $total, $i);
         } else {
-            _e('error');
+            esc_html_e(" No Role Record Found");
         }
-        wp_die();
+        return;
     }
 
     /**
      * Function for user sorting by name
      * 
+     * @var $select_input
      */
-    public function user_name_sorting()
+    public function user_name_sorting($select_input)
     {
-        //checking and verifing the nonce
-        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
-            $select_input = isset($_POST['select_input']) ? sanitize_text_field($_POST['select_input']) : '';
-            $total = get_users();
-            if ($select_input == 'asc') {
-                $user_query = get_users(array('order' => 'ASC', 'orderby' => 'display_name', 'number' => 5));
-            } elseif ($select_input == 'desc') {
-                $user_query = get_users(array('order' => 'DESC', 'orderby' => 'display_name', 'number' => 5));
-            }
-            $i = 1;
-            _e($this->user_table($user_query, $total, $i));
-        } else {
-            _e('error');
+        $total = get_users();
+        if ($select_input == 'asc') {
+            $user_query = get_users(array('order' => 'ASC', 'orderby' => 'display_name', 'number' => 5));
+        } elseif ($select_input == 'desc') {
+            $user_query = get_users(array('order' => 'DESC', 'orderby' => 'display_name', 'number' => 5));
         }
-        wp_die();
+        $i = 1;
+        if (!empty($user_query)) {
+            $this->user_table($user_query, $total, $i);
+        } else {
+            esc_html_e(" No Name Record Found");
+        }
+        return;
     }
-    
+
     /**
      * Function for user pagination
      * 
+     * @var $search_input
+     * @var $i
      */
-    public function user_pagination()
+    public function user_pagination($search_input, $i)
     {
-        //checking and verifing the nonce
-        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
-            $search_input = isset($_POST['search_input']) ? sanitize_text_field($_POST['search_input']) : '';
-            if ($search_input == '') {
-                $i = isset($_POST['i']) ? sanitize_text_field($_POST['i']) : '';
-                $user_query = get_users(
-                    array(
-                        'number' => 5,
-                        'offset' => $i == 1 ? 0 : ($i - 1) * 5
-                    )
-                );
-                $total = get_users();
-            } else {
-                $i = isset($_POST['i']) ? sanitize_text_field($_POST['i']) : '';
-                $user_query = get_users(
-                    array(
-                        'search' => '*' . esc_attr($search_input) . '*',
-                        'search_columns' => array(
-                            'user_login',
-                            'display_name',
-                        ),
-                        'number' => 5,
-                        'offset' => $i == 1 ? 0 : ($i - 1) * 5
-                    )
-                );
-                $total =  get_users(
-                    array(
-                        'search' => '*' . esc_attr($search_input) . '*',
-                        'search_columns' => array(
-                            'display_name',
-                            'user_login',
-                        )
-                    )
-                );
-            }
-            //calling to display table
-            _e($this->user_table($user_query, $total, $i));
+        if ($search_input == '') {
+            $user_query = get_users(
+                array(
+                    'number' => 5,
+                    'offset' => $i == 1 ? 0 : ($i - 1) * 5
+                )
+            );
+            $total = get_users();
         } else {
-            _e('error');
+            $user_query = get_users(
+                array(
+                    'search' => '*' . esc_attr($search_input) . '*',
+                    'search_columns' => array(
+                        'user_login',
+                        'display_name',
+                    ),
+                    'number' => 5,
+                    'offset' => $i == 1 ? 0 : ($i - 1) * 5
+                )
+            );
+            $total =  get_users(
+                array(
+                    'search' => '*' . esc_attr($search_input) . '*',
+                    'search_columns' => array(
+                        'display_name',
+                        'user_login',
+                    )
+                )
+            );
         }
-        wp_die();
+        //calling to display table
+        $this->user_table($user_query, $total, $i);
+
+        return;
     }
 
     /**
      * Function for search  user 
      * 
+     * @var $search_input
      */
-    public function search_user()
+    public function search_user($search_input)
     {
-        //checking and verifing the nonce
-        if (isset($_POST['security']) && wp_verify_nonce(sanitize_key($_POST['security']), 'search_nonce')) {
-
-            $search_input = isset($_POST['search_input']) ? sanitize_text_field($_POST['search_input']) : '';
-            if ($search_input == '') {
-                $total = get_users();
-                $user_query = get_users(array('number' => 5));
-            } else {
-                $roles = array('administrator', 'editor', 'author', 'contributor', 'subscriber');
-                if (in_array($search_input, $roles)) {
-
-                    $user_query = get_users(
-                        array(
-                            'role' => $search_input,
-                            'number' => 5,
-                        )
-                    );
-                    $total = get_users(
-                        array(
-                            'role' => '*' . esc_attr($search_input) . '*',
-                        )
-                    );
-                } else {
-                    $user_query = get_users(
-                        array(
-                            'search' => '*' . esc_attr($search_input) . '*',
-                            'search_columns' => array(
-                                'user_login',
-                                'user_display',
-                            ),
-                            'number' => 5,
-                        )
-                    );
-                    $total = get_users(
-                        array(
-                            'search' => '*' . esc_attr($search_input) . '*',
-                            'search_columns' => array(
-                                'user_login',
-                                'user_display',
-                            )
-                        )
-                    );
-                }
-            }
-            $i = 1;
-            _e($this->user_table($user_query, $total, $i));
+        if ($search_input == '') {
+            $total = get_users();
+            $user_query = get_users(array('number' => 5));
         } else {
-            _e('error');
+            $roles = array('administrator', 'editor', 'author', 'contributor', 'subscriber');
+            if (in_array($search_input, $roles)) {
+
+                $user_query = get_users(
+                    array(
+                        'role' => $search_input,
+                        'number' => 5,
+                    )
+                );
+                $total = get_users(
+                    array(
+                        'role' => $search_input,
+                    )
+                );
+            } else {
+                $user_query = get_users(
+                    array(
+                        'search' => '*' . esc_attr($search_input) . '*',
+                        'search_columns' => array(
+                            'user_login',
+                            'user_display',
+                        ),
+                        'number' => 5,
+                    )
+                );
+                $total = get_users(
+                    array(
+                        'search' => '*' . esc_attr($search_input) . '*',
+                        'search_columns' => array(
+                            'user_login',
+                            'user_display',
+                        )
+                    )
+                );
+            }
         }
-        wp_die();
+        $i = 1;
+        $this->user_table($user_query, $total, $i);
+        return;
     }
 
     /**
@@ -257,7 +273,7 @@ class User_Detail
         }
         return;
     }
-    
+
     /**
      * Function show the table of user lists with pagination
      * 
